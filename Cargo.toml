@@ -1,0 +1,9 @@
+[package]
+authors = ["Sleeyax <yourd3veloper@gmail.com>"]
+name = "ml-crypto-trading-bot"
+version = "0.0.1"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]

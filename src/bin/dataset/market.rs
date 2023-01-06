@@ -8,25 +8,29 @@ use binance::{
 use common::config::BinanceConfig;
 use genawaiter::rc::{Co, Gen};
 
+/// The maximum amount of Klines in the response binance supports.
 pub const MAX_KLINES: u16 = 1500;
 
-/// Generator that returns ALL hourly klines up untill now.
-/// Note that the returned results are unsorted.
+/// The starting timestamp when binance started indexing market data.
+/// Human readable date: `2017-08-17T04:00:00.000Z`.
+const BINANCE_EPOCH: u64 = 1502942400000;
+
+/// Generator that returns ALL hourly klines from `2017-08-17T04:00:00.000Z` until now.
 pub fn get_binance_klines(
     config: BinanceConfig,
     pair: String,
 ) -> genawaiter::rc::Gen<KlineSummary, (), impl Future<Output = ()>> {
     Gen::new(|co: Co<KlineSummary>| async move {
         let market: Market = Binance::new(Some(config.api_key), Some(config.api_secret));
-        let mut end_time: Option<u64> = None;
+        let mut start_time: Option<u64> = Some(BINANCE_EPOCH);
 
         loop {
             match market.get_klines(
                 pair.replace("/", ""),
                 "1h",
                 Some(MAX_KLINES),
+                start_time,
                 None,
-                end_time,
             ) {
                 Ok(klines) => match klines {
                     KlineSummaries::AllKlineSummaries(klines) => {
@@ -34,15 +38,15 @@ pub fn get_binance_klines(
                             break;
                         }
 
-                        let first_kline = klines.first().unwrap().clone();
+                        let last_kline = klines.last().unwrap().clone();
 
                         for kline in klines {
                             co.yield_(kline).await;
                         }
 
-                        end_time = Some(
-                            first_kline.close_time as u64
-                                - Duration::from_secs(3600).as_millis() as u64,
+                        start_time = Some(
+                            last_kline.close_time as u64
+                                + Duration::from_secs(3600).as_millis() as u64,
                         );
                     }
                 },

@@ -18,7 +18,7 @@ pub struct BinanceConfig {
 
 /// Tries to load the specified config file.
 /// Panics when it can't be found or has an invalid format.
-pub fn load_config(name: &str) -> AppConfig {
+pub fn try_load_config(name: &str) -> AppConfig {
     let settings = Config::builder()
         .add_source(File::with_name(name))
         .build()

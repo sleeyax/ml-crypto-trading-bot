@@ -1,6 +1,6 @@
-use std::iter::zip;
 use lightgbm::{Booster, Dataset};
 use serde_json::json;
+use std::iter::zip;
 
 type Features = Vec<Vec<f64>>;
 type Labels = Vec<f32>;
@@ -30,11 +30,13 @@ fn load_dataset(file_path: &str) -> (Features, Labels) {
 }
 
 fn main() -> std::io::Result<()> {
-    let (train_features, train_labels) =
-        load_dataset("/home/quinten/Programming/Rust/ml-crypto-trading-bot/datasets/BTC-Hourly.csv");
+    let (train_features, train_labels) = load_dataset(
+        "/home/quinten/Programming/Rust/ml-crypto-trading-bot/datasets/BTC-Hourly.csv",
+    );
 
-    let (test_features, test_labels) =
-        load_dataset("/home/quinten/Programming/Rust/ml-crypto-trading-bot/datasets/BTC-Hourly.csv");
+    let (test_features, test_labels) = load_dataset(
+        "/home/quinten/Programming/Rust/ml-crypto-trading-bot/datasets/BTC-Hourly.csv",
+    );
 
     let train_dataset = Dataset::from_mat(train_features, train_labels).unwrap();
 
@@ -59,8 +61,12 @@ fn main() -> std::io::Result<()> {
         // println!("label: {}, predicted: {}, diff: {}", label, pred, diff);
     }
 
-    let accuracy_percentage = ((total_accurate_predictions as f32 / result_count as f32 * 100_f32)).round();
-    println!("accuracy: {} / {} (~{}%, fluctuation: {})", total_accurate_predictions, result_count, accuracy_percentage, fluctuation);
+    let accuracy_percentage =
+        (total_accurate_predictions as f32 / result_count as f32 * 100_f32).round();
+    println!(
+        "accuracy: {} / {} (~{}%, fluctuation: {})",
+        total_accurate_predictions, result_count, accuracy_percentage, fluctuation
+    );
 
     Ok(())
 }

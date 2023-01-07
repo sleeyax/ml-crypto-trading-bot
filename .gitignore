@@ -1,3 +1,4 @@
 /target
 config.yaml
 model.trained
+.venv

@@ -1,6 +1,7 @@
 use common::config::{try_load_config, DEFAULT_CONFIG};
+use market::{BinanceKlineOptions, BinanceMarket};
 
-use crate::market::MAX_KLINES;
+use crate::market::BINANCE_MAX_KLINES;
 
 mod market;
 
@@ -9,6 +10,15 @@ fn main() {
     let file_path =
         "/home/quinten/Programming/Rust/ml-crypto-trading-bot/datasets/BTC-Hourly-Binance.csv";
     let symbol = "BTC/USDT";
+
+    let binance_market = BinanceMarket::new(config.binance);
+    let binance_kline_options = BinanceKlineOptions {
+        pair: symbol.into(),
+        interval: market::BinanceKlineInterval::Hourly,
+        limit: None,
+        start: None,
+        end: None,
+    };
 
     let mut writer = csv::WriterBuilder::new()
         .delimiter(b',')
@@ -31,14 +41,14 @@ fn main() {
 
     let mut i: u64 = 0;
 
-    for kline in market::get_binance_klines(config.binance, symbol.into()) {
-        let count = i % MAX_KLINES as u64;
+    for kline in binance_market.get_klines(binance_kline_options) {
+        let count = i % BINANCE_MAX_KLINES as u64;
 
         if count == 0 && i != 0 {
             println!();
         }
 
-        print!("\rwriting record {} / {}", count + 1, MAX_KLINES);
+        print!("\rwriting record {} / {}", count + 1, BINANCE_MAX_KLINES);
 
         writer
             .write_record(&[

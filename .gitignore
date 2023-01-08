@@ -2,3 +2,5 @@
 config.yaml
 model.trained
 .venv
+__pycache__
+*.h5

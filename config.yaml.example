@@ -1,3 +1,11 @@
+symbol: BTC/USDT
+
 binance:
   api_key: paste your binance api key here
   api_secret: paste your binance api secret here
+  
+trade:
+  test: true
+  symbol: BTC/USDT
+  amount: 50
+  profit_percentage: 1.01 # 1%

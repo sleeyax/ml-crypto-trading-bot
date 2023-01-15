@@ -1,7 +1,8 @@
 use std::{future::Future, time::Duration};
 
 use binance::{
-    api::Binance,
+    account::Account,
+    api::Binance as BinanceApi,
     errors::Result,
     market::Market,
     model::{KlineSummaries, KlineSummary, SymbolPrice},
@@ -18,10 +19,8 @@ pub const BINANCE_MAX_KLINES: u16 = 1500;
 pub const BINANCE_MARKET_EPOCH: u64 = 1502942400000;
 
 pub struct BinanceMarket {
-    /// Config struct encapsulating Binance API keys.
-    config: BinanceConfig,
-
     market: Market,
+    account: Account,
 }
 
 #[allow(dead_code)]
@@ -74,11 +73,15 @@ pub struct BinanceKlineOptions {
 
 impl BinanceMarket {
     pub fn new(config: BinanceConfig) -> Self {
-        let market: Market = Binance::new(
+        let market: Market = BinanceApi::new(
             Some(config.api_key.clone()),
             Some(config.api_secret.clone()),
         );
-        BinanceMarket { config, market }
+        let account: Account = Account::new(
+            Some(config.api_key.clone()),
+            Some(config.api_secret.clone()),
+        );
+        BinanceMarket { market, account }
     }
 
     /// Generator that returns klines from binance.
@@ -130,5 +133,23 @@ impl BinanceMarket {
 
     pub fn get_price(&self, symbol: &str) -> Result<SymbolPrice> {
         return self.market.get_price(to_symbol(symbol));
+    }
+
+    pub fn place_buy_order(&self, symbol: &str, quantity: f64, test: bool) -> Result<()> {
+        let symbol = to_symbol(symbol);
+        if test {
+            self.account.test_market_buy(symbol, quantity)
+        } else {
+            self.account.market_buy(symbol, quantity).map(|_| ())
+        }
+    }
+
+    pub fn place_sell_order(&self, symbol: &str, quantity: f64, test: bool) -> Result<()> {
+        let symbol = to_symbol(symbol);
+        if test {
+            self.account.test_market_sell(symbol, quantity)
+        } else {
+            self.account.market_sell(symbol, quantity).map(|_| ())
+        }
     }
 }

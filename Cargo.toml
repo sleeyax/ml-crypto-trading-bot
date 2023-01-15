@@ -15,3 +15,5 @@ binance = "0.20.2"
 config = {version = "0.13.3", features = ["yaml"]}
 serde = { version = "1.0.152", features = ["derive"] }
 genawaiter = "0.99.1"
+paris = { version = "1.5.13", features = ["timestamps"] }
+ctrlc = "3.2.4"

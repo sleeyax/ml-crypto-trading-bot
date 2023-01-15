@@ -17,6 +17,7 @@ impl Model {
                 "num_leaves": 20,
                 "learning_rate": 0.05,
                 "n_estimators": 720,
+                "verbose": -1
             }
         };
 

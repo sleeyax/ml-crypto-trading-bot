@@ -1,22 +1,21 @@
-use common::config::{try_load_config, DEFAULT_CONFIG};
-use market::{BinanceKlineOptions, BinanceMarket};
+use crate::{
+    config::{try_load_config, DEFAULT_CONFIG},
+    market::{
+        BinanceKlineInterval, BinanceKlineOptions, BinanceMarket, BINANCE_MARKET_EPOCH,
+        BINANCE_MAX_KLINES,
+    },
+};
 
-use crate::market::BINANCE_MAX_KLINES;
-
-mod market;
-
-fn main() {
+/// Fetch ALL klines from Binance and write them to a CSV file.
+pub fn save_binance_dataset(file_path: &str, symbol: &str) {
     let config = try_load_config(DEFAULT_CONFIG);
-    let file_path =
-        "/home/quinten/Programming/Rust/ml-crypto-trading-bot/datasets/BTC-Hourly-Binance.csv";
-    let symbol = "BTC/USDT";
 
     let binance_market = BinanceMarket::new(config.binance);
     let binance_kline_options = BinanceKlineOptions {
         pair: symbol.into(),
-        interval: market::BinanceKlineInterval::Hourly,
+        interval: BinanceKlineInterval::Hourly,
         limit: None,
-        start: None,
+        start: Some(BINANCE_MARKET_EPOCH),
         end: None,
     };
 
@@ -66,4 +65,8 @@ fn main() {
 
         i += 1;
     }
+}
+
+pub fn to_symbol(symbol: &str) -> String {
+    symbol.replace("/", "")
 }

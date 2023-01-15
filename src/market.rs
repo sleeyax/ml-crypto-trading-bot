@@ -2,22 +2,26 @@ use std::{future::Future, time::Duration};
 
 use binance::{
     api::Binance,
+    errors::Result,
     market::Market,
-    model::{KlineSummaries, KlineSummary},
+    model::{KlineSummaries, KlineSummary, SymbolPrice},
 };
-use common::config::BinanceConfig;
 use genawaiter::rc::{Co, Gen};
+
+use crate::{config::BinanceConfig, utils::to_symbol};
 
 /// The maximum amount of Klines binance supports in the response body.
 pub const BINANCE_MAX_KLINES: u16 = 1500;
 
 /// The starting timestamp when binance started indexing market data.
 /// Human readable date: `2017-08-17T04:00:00.000Z`.
-const BINANCE_MARKET_EPOCH: u64 = 1502942400000;
+pub const BINANCE_MARKET_EPOCH: u64 = 1502942400000;
 
 pub struct BinanceMarket {
     /// Config struct encapsulating Binance API keys.
     config: BinanceConfig,
+
+    market: Market,
 }
 
 #[allow(dead_code)]
@@ -59,7 +63,8 @@ pub struct BinanceKlineOptions {
     pub limit: Option<u16>,
 
     /// Start time.
-    /// Defaults to `BINANCE_MARKET_EPOCH`.
+    /// Set to `BINANCE_MARKET_EPOCH` to specify the very beginning.
+    /// Defaults to `None`.
     pub start: Option<u64>,
 
     /// End time.
@@ -69,25 +74,27 @@ pub struct BinanceKlineOptions {
 
 impl BinanceMarket {
     pub fn new(config: BinanceConfig) -> Self {
-        BinanceMarket { config }
+        let market: Market = Binance::new(
+            Some(config.api_key.clone()),
+            Some(config.api_secret.clone()),
+        );
+        BinanceMarket { config, market }
     }
 
-    /// Generator that returns ALL klines from `BINANCE_MARKET_EPOCH` until now.
+    /// Generator that returns klines from binance.
+    /// Defaults to ALL klines from `BINANCE_MARKET_EPOCH` until now.
     pub fn get_klines(
         &self,
         options: BinanceKlineOptions,
     ) -> genawaiter::rc::Gen<KlineSummary, (), impl Future<Output = ()>> {
-        let market: Market = Binance::new(
-            Some(self.config.api_key.clone()),
-            Some(self.config.api_secret.clone()),
-        );
+        let market = self.market.clone();
 
         Gen::new(|co: Co<KlineSummary>| async move {
-            let mut start_time: Option<u64> = options.start.or(Some(BINANCE_MARKET_EPOCH));
+            let mut start_time: Option<u64> = options.start;
 
             loop {
                 match market.get_klines(
-                    options.pair.replace("/", ""),
+                    to_symbol(&options.pair),
                     options.interval.to_string(),
                     options.limit.or(Some(BINANCE_MAX_KLINES)),
                     start_time,
@@ -119,5 +126,9 @@ impl BinanceMarket {
                 };
             }
         })
+    }
+
+    pub fn get_price(&self, symbol: &str) -> Result<SymbolPrice> {
+        return self.market.get_price(to_symbol(symbol));
     }
 }

@@ -9,6 +9,7 @@ pub struct AppConfig {
     pub binance: BinanceConfig,
     pub trade: TradeConfig,
     pub symbol: String,
+    pub verbose: bool,
 }
 
 #[derive(Debug, Deserialize)]

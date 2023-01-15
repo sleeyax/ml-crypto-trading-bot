@@ -33,6 +33,12 @@ fn main() {
     let model = Model::new();
     let mut log = Logger::new();
 
+    if config.trade.test {
+        log.warn("Bot is running in test mode. No real funds will be spent.");
+    } else {
+        log.warn("Bot is running in production mode. Real funds will be spent!");
+    }
+
     while running.load(Ordering::SeqCst) {
         // Load dataset data (features, labels) from binance klines API.
         let dataset = DataSet::from_binance(
@@ -52,15 +58,12 @@ fn main() {
         let booster = model.train(dataset.clone()).unwrap();
         let end = Instant::now();
         let elapsed = end.duration_since(start);
-        log.done().success(format_args!(
+        log.success(format_args!(
             "Model trained successfully! Time elapsed: {:?}",
             elapsed
         ));
 
         // Get the current price candle.
-        let current_price = binance_market
-            .get_price(&config.symbol)
-            .expect("failed to get current price");
         let current_kline = binance_market
             .get_klines(BinanceKlineOptions {
                 pair: config.symbol.clone(),
@@ -85,7 +88,6 @@ fn main() {
             dataset.0.last().unwrap()[0],
             dataset.1.last().unwrap()
         ));
-        log.info(format_args!("Current price: {}.", current_price.price));
         log.info(format_args!(
             "Current kline open, close, high: {}, {}, {}.",
             current_kline_open, current_kline_close, current_kline.high
@@ -101,15 +103,19 @@ fn main() {
         }
 
         // Place buy order
-        log.info(format_args!(
-            "Buying {} {} (test mode: {}).",
+        log.loading(format_args!(
+            "Buying {} {}.",
             config.trade.amount,
             config.symbol.clone(),
-            config.trade.test
         ));
         binance_market
             .place_buy_order(&config.symbol, config.trade.amount, config.trade.test)
             .expect("failed to place buy order");
+        log.success(format_args!(
+            "Bought {} {}.",
+            config.trade.amount,
+            config.symbol.clone(),
+        ));
 
         // Wait for price to go up.
         // We don't wait for the prediction to match exactly.
@@ -125,20 +131,26 @@ fn main() {
 
             match event {
                 WebsocketEvent::Kline(kline_event) => {
-                    log.log(format_args!(
-                        "{} candle open: {}, close {}, high: {}, low: {}",
-                        kline_event.kline.symbol,
-                        kline_event.kline.open,
-                        kline_event.kline.close,
-                        kline_event.kline.low,
-                        kline_event.kline.high
-                    ));
+                    if config.verbose {
+                        log.log(format_args!(
+                            "{} candle open: {}, close {}, high: {}, low: {}",
+                            kline_event.kline.symbol,
+                            kline_event.kline.open,
+                            kline_event.kline.close,
+                            kline_event.kline.low,
+                            kline_event.kline.high
+                        ));
+                    }
 
                     let new_kline_close = kline_event.kline.close.parse::<f64>().unwrap();
 
                     if new_kline_close >= current_kline_close * config.trade.profit_percentage {
                         let profit = new_kline_close - current_kline_close;
-                        log.info(format_args!("Profit percentage reached! Placing sell order for an estimated profit of {} USD.", profit));
+
+                        log.loading(format_args!(
+                            "Placing sell order for an estimated profit of {} USD.",
+                            profit,
+                        ));
                         binance_market
                             .place_sell_order(
                                 &config.symbol,
@@ -146,8 +158,12 @@ fn main() {
                                 config.trade.test,
                             )
                             .expect("failed to place sell order");
+                        log.success(format_args!(
+                            "Successfully sold for an estimated profit of {} USD.",
+                            profit
+                        ));
+
                         connected.store(false, Ordering::SeqCst);
-                        log.success("Successfully placed sell order!");
                     }
                 }
                 _ => (),

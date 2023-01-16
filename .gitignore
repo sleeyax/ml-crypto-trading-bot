@@ -4,3 +4,4 @@ model.trained
 .venv
 __pycache__
 *.h5
+experimental/

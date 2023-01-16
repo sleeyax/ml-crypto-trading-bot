@@ -143,10 +143,9 @@ fn main() {
                     }
 
                     let new_kline_close = kline_event.kline.close.parse::<f64>().unwrap();
+                    let profit = new_kline_close - current_kline_close;
 
-                    if new_kline_close >= current_kline_close * config.trade.profit_percentage {
-                        let profit = new_kline_close - current_kline_close;
-
+                    if profit >= config.trade.amount * config.trade.profit_percentage {
                         log.loading(format_args!(
                             "Placing sell order for an estimated profit of {} USD.",
                             profit,

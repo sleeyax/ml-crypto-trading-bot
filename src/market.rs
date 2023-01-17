@@ -138,18 +138,24 @@ impl BinanceMarket {
     pub fn place_buy_order(&self, symbol: &str, quantity: f64, test: bool) -> Result<()> {
         let symbol = to_symbol(symbol);
         if test {
-            self.account.test_market_buy(symbol, quantity)
+            self.account
+                .test_market_buy_using_quote_quantity(symbol, quantity)
         } else {
-            self.account.market_buy(symbol, quantity).map(|_| ())
+            self.account
+                .market_buy_using_quote_quantity(symbol, quantity)
+                .map(|_| ())
         }
     }
 
     pub fn place_sell_order(&self, symbol: &str, quantity: f64, test: bool) -> Result<()> {
         let symbol = to_symbol(symbol);
         if test {
-            self.account.test_market_sell(symbol, quantity)
+            self.account
+                .test_market_sell_using_quote_quantity(symbol, quantity)
         } else {
-            self.account.market_sell(symbol, quantity).map(|_| ())
+            self.account
+                .market_sell_using_quote_quantity(symbol, quantity)
+                .map(|_| ())
         }
     }
 }

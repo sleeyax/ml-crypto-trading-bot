@@ -12,11 +12,13 @@ impl Model {
         let params = json! {
             {
                 "objective": "regression",
-                // "num_iterations": 30442,
-                // "num_leaves": 13,
-                "num_leaves": 20,
-                "learning_rate": 0.05,
-                "n_estimators": 720,
+                "num_leaves": 13,
+                "num_iterations": 1000,
+                "bagging_fraction": 0.6065339345698,
+                "feature_fraction": 0.99999999,
+                "lambda_l1": 0.0120496605030283,
+                "lambda_l2": 0.139677140815755,
+                "max_bin_by_feature": 1033,
                 "verbose": -1
             }
         };

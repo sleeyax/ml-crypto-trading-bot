@@ -9,7 +9,7 @@ use crate::market::{BinanceKlineInterval, BinanceKlineOptions, BinanceMarket};
 use crate::model::Model;
 use binance::websockets::{WebSockets, WebsocketEvent};
 use paris::Logger;
-use utils::to_symbol;
+use utils::{calculate_profit, to_symbol};
 
 pub mod config;
 pub mod dataset;
@@ -131,10 +131,16 @@ fn main() {
 
             match event {
                 WebsocketEvent::Kline(kline_event) => {
+                    let initial_price = current_kline_close;
+                    let selling_price = kline_event.kline.close.parse::<f64>().unwrap();
+                    let (profit, profit_percentage) =
+                        calculate_profit(config.trade.amount, initial_price, selling_price);
+
                     if config.verbose {
                         log.log(format_args!(
-                            "{} candle open: {}, close {}, high: {}, low: {}",
-                            kline_event.kline.symbol,
+                            "Current profit: {} (%{}). Candle open: {}, close {}, high: {}, low: {}",
+                            profit,
+                            profit_percentage,
                             kline_event.kline.open,
                             kline_event.kline.close,
                             kline_event.kline.low,
@@ -142,10 +148,7 @@ fn main() {
                         ));
                     }
 
-                    let new_kline_close = kline_event.kline.close.parse::<f64>().unwrap();
-                    let profit = new_kline_close - current_kline_close;
-
-                    if profit >= config.trade.amount * config.trade.profit_percentage {
+                    if profit_percentage >= config.trade.profit_percentage {
                         log.loading(format_args!(
                             "Placing sell order for an estimated profit of {} USD.",
                             profit,

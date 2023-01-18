@@ -9,4 +9,4 @@ trade:
   test: true
   symbol: BTC/USDT
   amount: 50
-  profit_percentage: 0.10 # 10%
+  profit_percentage: 10 # 10%

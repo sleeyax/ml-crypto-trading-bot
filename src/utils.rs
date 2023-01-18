@@ -70,3 +70,23 @@ pub fn save_binance_dataset(file_path: &str, symbol: &str) {
 pub fn to_symbol(symbol: &str) -> String {
     symbol.replace("/", "")
 }
+
+pub fn calculate_profit(investment: f64, initial_price: f64, selling_price: f64) -> (f64, f64) {
+    let price = investment * (selling_price / initial_price) - investment;
+    let percentage = (price / investment) * 100.0;
+    (price, percentage)
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::utils::calculate_profit;
+
+    #[test]
+    fn test_calculate_profit() {
+        assert_eq!(calculate_profit(10.0, 20.0, 30.0), (5.0, 50.0));
+        assert_eq!(
+            calculate_profit(30.0, 20878.0, 20900.0),
+            (0.03161222339304359, 0.10537407797681198)
+        );
+    }
+}

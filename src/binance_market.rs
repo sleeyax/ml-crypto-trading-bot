@@ -1,4 +1,4 @@
-use crate::{config::BinanceConfig, market::Market, utils::to_symbol};
+use crate::{config::BinanceConfig, market::Market};
 use binance::{
     account::Account,
     api::Binance as BinanceApi,
@@ -172,4 +172,8 @@ impl Market for BinanceMarket {
 /// Converts a binance error to an anyhow error.
 fn map_binance_error(err: binance::errors::Error) -> anyhow::Error {
     anyhow::anyhow!(err.to_string())
+}
+
+pub fn to_symbol(symbol: &str) -> String {
+    symbol.replace("/", "")
 }

@@ -1,9 +1,9 @@
 use crate::{
-    binance_market::{BinanceKlineInterval, BinanceKlineOptions, BinanceMarket},
+    binance_market::{to_symbol, BinanceKlineInterval, BinanceKlineOptions, BinanceMarket},
     dataset::DataSet,
     market::Market,
     strategy::{LightGBMStrategy, Strategy},
-    utils::{calculate_profit, earlier_seconds, floor_hour, now, to_symbol},
+    utils::{calculate_profit, earlier_seconds, floor_hour, now},
 };
 use anyhow::anyhow;
 use binance::websockets::{WebSockets, WebsocketEvent};

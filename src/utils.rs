@@ -69,10 +69,6 @@ pub fn save_binance_dataset(file_path: &str, symbol: &str) {
     }
 }
 
-pub fn to_symbol(symbol: &str) -> String {
-    symbol.replace("/", "")
-}
-
 pub fn calculate_profit(investment: f64, initial_price: f64, selling_price: f64) -> (f64, f64) {
     let price = investment * (selling_price / initial_price) - investment;
     let percentage = (price / investment) * 100.0;

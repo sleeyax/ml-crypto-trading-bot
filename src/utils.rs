@@ -1,9 +1,9 @@
 use crate::{
-    config::{try_load_config, DEFAULT_CONFIG},
-    market::{
+    binance_market::{
         BinanceKlineInterval, BinanceKlineOptions, BinanceMarket, BINANCE_MARKET_EPOCH,
         BINANCE_MAX_KLINES,
     },
+    config::{try_load_config, DEFAULT_CONFIG},
 };
 
 /// Fetch ALL klines from Binance and write them to a CSV file.

@@ -32,3 +32,20 @@ impl Model {
         lightgbm::Booster::train(train_dataset, &self.params)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::dataset::DataSet;
+
+    use super::Model;
+
+    #[test]
+    fn test_train() {
+        let model = Model::new();
+        let dataset = DataSet(vec![vec![0.0]], vec![1.0, 2.0, 3.0, 4.0, 5.0]);
+        let booster = model.train(dataset).unwrap();
+        let prediction = booster.predict(vec![vec![6.0]]).unwrap();
+        let score = prediction[0][0];
+        assert_eq!(score, 1.0);
+    }
+}

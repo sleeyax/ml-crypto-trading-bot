@@ -1,6 +1,6 @@
 use csv::ReaderBuilder;
 
-use crate::market::{BinanceKlineOptions, BinanceMarket};
+use crate::binance_market::{BinanceKlineOptions, BinanceMarket};
 
 pub type Features = Vec<Vec<f64>>;
 pub type Labels = Vec<f32>;

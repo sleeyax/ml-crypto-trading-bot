@@ -7,6 +7,8 @@ binance:
   
 trade:
   test: true
-  symbol: BTC/USDT
   amount: 50
   profit_percentage: 10 # 10%
+
+telegram:
+  bot_token: 123456789:blablabla

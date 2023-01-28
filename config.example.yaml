@@ -4,6 +4,7 @@ verbose: true
 binance:
   api_key: paste your binance api key here
   api_secret: paste your binance api secret here
+  dataset_max_days: 7 # maximum amount of days to include in the dataset (to train the model)
   
 trade:
   test: true

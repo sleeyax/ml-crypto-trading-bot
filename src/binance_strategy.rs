@@ -24,7 +24,7 @@ impl LightGBMStrategy<BinanceMarket> {
             BinanceKlineOptions {
                 pair: self.config.symbol.clone(),
                 interval: BinanceKlineInterval::Hourly,
-                limit: Some(7 * 24), // last 7 days (as hours)
+                limit: Some(self.config.binance.dataset_max_days * 24), // last x days as hours
                 start: None,
                 end: None,
             },

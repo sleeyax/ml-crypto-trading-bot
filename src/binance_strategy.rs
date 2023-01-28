@@ -3,7 +3,7 @@ use crate::{
     dataset::DataSet,
     market::Market,
     strategy::{LightGBMStrategy, Strategy},
-    utils::{calculate_profit, to_symbol},
+    utils::{calculate_profit, earlier_seconds, floor_hour, now, to_symbol},
 };
 use anyhow::anyhow;
 use binance::websockets::{WebSockets, WebsocketEvent};
@@ -19,6 +19,8 @@ use std::{
 impl LightGBMStrategy<BinanceMarket> {
     /// Load dataset data (features, labels) from binance klines API.
     fn load_dataset(&self) -> DataSet {
+        let one_hour_ago = earlier_seconds(floor_hour(now()), 3600);
+
         DataSet::from_binance(
             &self.market,
             BinanceKlineOptions {
@@ -26,7 +28,7 @@ impl LightGBMStrategy<BinanceMarket> {
                 interval: BinanceKlineInterval::Hourly,
                 limit: Some(self.config.binance.dataset_max_days * 24), // last x days as hours
                 start: None,
-                end: None,
+                end: Some(one_hour_ago.as_millis() as u64), // exclude the curent candle
             },
         )
     }

@@ -70,7 +70,7 @@ impl Strategy for LightGBMStrategy<BinanceMarket> {
             let (current_kline_open, current_kline_close) = self.get_current_candle().unwrap();
 
             // Predict the next `high` price.
-            let prediction = booster.predict(vec![vec![current_kline_close]]).unwrap();
+            let prediction = booster.predict(vec![vec![current_kline_open]]).unwrap();
             let score = prediction[0][0];
 
             info!(

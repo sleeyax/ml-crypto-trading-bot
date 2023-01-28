@@ -12,6 +12,7 @@ use teloxide::Bot;
 extern crate log;
 
 pub mod binance_market;
+pub mod binance_strategy;
 pub mod config;
 pub mod dataset;
 pub mod market;

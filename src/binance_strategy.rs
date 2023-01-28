@@ -110,6 +110,7 @@ impl Strategy for LightGBMStrategy<BinanceMarket> {
             // Wait and sell once the prediction has been reached.
             // If the prediction hasn't been reached at the end of the candle, we wait until we can sell the amount at the same price or higher,
             // so we never sell at a loss!
+            let mut invalid_prediction_warning_shown = false;
             let start_of_next_candle = ceil_hour(now());
             let connected = AtomicBool::new(true);
             let mut web_socket = WebSockets::new(|event: WebsocketEvent| {
@@ -125,22 +126,26 @@ impl Strategy for LightGBMStrategy<BinanceMarket> {
                         let selling_price = kline_event.kline.close.parse::<f64>().unwrap();
 
                         debug!(
-                            "Candle open: {}, close {}, high: {}, low: {}. Initial price: {}, selling price: {} ({} difference)",
+                            "Candle open: {}, close {}, high: {}, low: {}.",
                             kline_event.kline.open,
                             kline_event.kline.close,
                             kline_event.kline.low,
                             kline_event.kline.high,
+                        );
+                        debug!(
+                            "Initial price: {}, selling price: {} ({} difference).",
                             initial_price,
                             selling_price,
-                            selling_price - initial_price,
+                            selling_price - initial_price
                         );
 
                         let now = now();
                         let is_predicted = selling_price >= score;
                         let is_end_of_candle = now >= start_of_next_candle;
 
-                        if !is_predicted && is_end_of_candle {
+                        if !is_predicted && is_end_of_candle && !invalid_prediction_warning_shown {
                             warn!("Invalid prediction. End of candle reached. Predicted high was {}, actual high is {}.", score,  kline_event.kline.high.parse::<f64>().unwrap());
+                            invalid_prediction_warning_shown = true;
                         }
 
                         if is_predicted || (is_end_of_candle && selling_price >= initial_price) {
@@ -151,7 +156,7 @@ impl Strategy for LightGBMStrategy<BinanceMarket> {
                             );
 
                             info!(
-                                "Selling {} {} order for an estimated profit of {} USD ({}%).",
+                                "Selling {} {} for an estimated profit of {} USD ({}%).",
                                 self.config.trade.amount,
                                 self.config.symbol.clone(),
                                 profit,

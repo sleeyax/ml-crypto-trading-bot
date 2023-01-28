@@ -108,6 +108,27 @@ pub fn floor_hour(timestamp: Duration) -> Duration {
     Duration::from_secs(nearest_hour)
 }
 
+/// Returns the nearest hour, rounded up.
+///
+/// Example:
+///
+/// ```
+/// let timestamp = Duration::from(1674940162060); // 2023-01-28T21:09:22.060Z
+/// let ceil = ceil_hour(timestamp);               // 2023-01-28T22:00:00.0Z
+/// ```
+pub fn ceil_hour(timestamp: Duration) -> Duration {
+    let system_time = UNIX_EPOCH + timestamp;
+
+    // Get the number of seconds since the nearest hour.
+    let seconds_since_nearest_hour =
+        system_time.duration_since(UNIX_EPOCH).unwrap().as_secs() % 3600;
+
+    // Add the number of seconds until the next hour to the current timestamp to get the upper hour.
+    let upper_hour = timestamp.as_millis() as u64 / 1000 + (3600 - seconds_since_nearest_hour);
+
+    Duration::from_secs(upper_hour)
+}
+
 /// Returns the current time as a unix epoch timestamp encapsulated in a `Duration`.
 /// Use `as_millis()` to acess the value accordingly.
 pub fn now() -> Duration {
@@ -119,7 +140,7 @@ pub fn now() -> Duration {
 mod tests {
     use std::time::Duration;
 
-    use crate::utils::{calculate_profit, floor_hour};
+    use crate::utils::{calculate_profit, ceil_hour, floor_hour};
 
     use super::earlier;
 
@@ -155,6 +176,21 @@ mod tests {
         );
         assert_eq!(
             floor_hour(Duration::from_millis(expected_timestamp as u64)).as_millis(),
+            expected_timestamp
+        );
+    }
+
+    #[test]
+    fn test_ceil_hour() {
+        let upper_timestamp = 1674928799000; // 2023-01-28T17:59:59 UTC
+        let lower_timestamp = 1674925201000; // 2023-01-28T17:00:01Z UTC
+        let expected_timestamp = 1674928800000; // 2023-01-28T18:00:00Z UTC
+        assert_eq!(
+            ceil_hour(Duration::from_millis(upper_timestamp)).as_millis(),
+            expected_timestamp
+        );
+        assert_eq!(
+            ceil_hour(Duration::from_millis(lower_timestamp)).as_millis(),
             expected_timestamp
         );
     }

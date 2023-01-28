@@ -3,7 +3,7 @@ use crate::{
     dataset::DataSet,
     market::Market,
     strategy::{LightGBMStrategy, Strategy},
-    utils::{calculate_profit, earlier_seconds, floor_hour, now},
+    utils::{calculate_profit, ceil_hour, earlier_seconds, floor_hour, now},
 };
 use anyhow::anyhow;
 use binance::websockets::{WebSockets, WebsocketEvent};
@@ -13,7 +13,6 @@ use std::{
         Arc,
     },
     thread,
-    time::Duration,
 };
 
 impl LightGBMStrategy<BinanceMarket> {
@@ -81,11 +80,11 @@ impl Strategy for LightGBMStrategy<BinanceMarket> {
             );
             info!("Predicted high: {}.", score);
 
-            // Wait for the right moment tot place a trade.
+            // Wait until the next candle if the trade is not profitable according to our prediction.
             if score < current_kline_open || score < current_kline_close {
-                let minutes = 10;
-                warn!("Predicted value {} is lower than the open ({}) or current ({}) price, skipping trade and waiting {} minutes until the next prediction.", score, current_kline_open, current_kline_close, minutes);
-                thread::sleep(Duration::from_secs(60 * minutes));
+                let duration = ceil_hour(now());
+                warn!("Predicted value {} is lower than the open ({}) or current ({}) price, skipping trade and waiting {:?} until the start of the next candle.", score, current_kline_open, current_kline_close, duration);
+                thread::sleep(duration);
                 continue;
             }
 
@@ -108,10 +107,10 @@ impl Strategy for LightGBMStrategy<BinanceMarket> {
                 self.config.symbol.clone(),
             );
 
-            // Wait for price to go up.
-            // We don't wait for the prediction to match exactly.
-            // The prediction should only serve as a general indicator (up or down).
-            // Instead we'll wait and sell only once a specific profit percentage has been reached.
+            // Wait and sell once the prediction has been reached.
+            // If the prediction hasn't been reached at the end of the candle, we wait until we can sell the amount at the same price or higher,
+            // so we never sell at a loss!
+            let start_of_next_candle = ceil_hour(now());
             let connected = AtomicBool::new(true);
             let mut web_socket = WebSockets::new(|event: WebsocketEvent| {
                 // Disconnect if we got the signal to terminate the program (e.g. CTRL + C).
@@ -124,26 +123,39 @@ impl Strategy for LightGBMStrategy<BinanceMarket> {
                     WebsocketEvent::Kline(kline_event) => {
                         let initial_price = current_kline_close;
                         let selling_price = kline_event.kline.close.parse::<f64>().unwrap();
-                        let (profit, profit_percentage) = calculate_profit(
-                            self.config.trade.amount,
-                            initial_price,
-                            selling_price,
-                        );
 
                         debug!(
-                            "Current profit: {} (%{}). Candle open: {}, close {}, high: {}, low: {}",
-                            profit,
-                            profit_percentage,
+                            "Candle open: {}, close {}, high: {}, low: {}. Initial price: {}, selling price: {} ({} difference)",
                             kline_event.kline.open,
                             kline_event.kline.close,
                             kline_event.kline.low,
-                            kline_event.kline.high
+                            kline_event.kline.high,
+                            initial_price,
+                            selling_price,
+                            selling_price - initial_price,
                         );
 
-                        if profit_percentage >= self.config.trade.profit_percentage {
+                        let now = now();
+                        let is_predicted = selling_price >= score;
+                        let is_end_of_candle = now >= start_of_next_candle;
+
+                        if !is_predicted && is_end_of_candle {
+                            warn!("Invalid prediction. End of candle reached. Predicted high was {}, actual high is {}.", score,  kline_event.kline.high.parse::<f64>().unwrap());
+                        }
+
+                        if is_predicted || (is_end_of_candle && selling_price >= initial_price) {
+                            let (profit, profit_percentage) = calculate_profit(
+                                self.config.trade.amount,
+                                initial_price,
+                                selling_price,
+                            );
+
                             info!(
-                                "Placing sell order for an estimated profit of {} USD.",
+                                "Selling {} {} order for an estimated profit of {} USD ({}%).",
+                                self.config.trade.amount,
+                                self.config.symbol.clone(),
                                 profit,
+                                profit_percentage,
                             );
                             self.market
                                 .place_sell_order(
@@ -153,8 +165,11 @@ impl Strategy for LightGBMStrategy<BinanceMarket> {
                                 )
                                 .expect("failed to place sell order");
                             info!(
-                                "Successfully sold for an estimated profit of {} USD.",
-                                profit
+                                "Sold {} {} for an estimated profit of {} USD ({}%).",
+                                self.config.trade.amount,
+                                self.config.symbol.clone(),
+                                profit,
+                                profit_percentage
                             );
 
                             connected.store(false, Ordering::SeqCst);

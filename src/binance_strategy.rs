@@ -83,7 +83,7 @@ impl Strategy for LightGBMStrategy<BinanceMarket> {
 
             // Wait until the next candle if the trade is not profitable according to our prediction.
             if score < current_kline_open || score < current_kline_close {
-                let duration = ceil_hour(now());
+                let duration = ceil_hour(now()) - now();
                 warn!("Predicted value {} is lower than the open ({}) or current ({}) price, skipping trade and waiting {:?} until the start of the next candle.", score, current_kline_open, current_kline_close, duration);
                 thread::sleep(duration);
                 continue;

@@ -1,11 +1,11 @@
 use crate::{config::AppConfig, dataset::DataSet, market::Market, model::Model};
 use std::{
-    sync::{atomic::AtomicBool, Arc},
+    sync::{atomic::AtomicBool, mpsc::Sender, Arc},
     time::Instant,
 };
 
 pub trait Strategy {
-    fn execute(&self, running: Arc<AtomicBool>);
+    fn execute(&self, running: Arc<AtomicBool>, tx: &Sender<String>);
 }
 
 pub struct LightGBMStrategy<M: Market> {

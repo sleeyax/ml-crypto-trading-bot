@@ -30,10 +30,11 @@ pub struct TradeConfig {
     pub profit_percentage: f64,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[allow(unused)]
 pub struct TelegramConfig {
     pub bot_token: String,
+    pub chat_id: u64,
 }
 
 /// Load the specified config file.

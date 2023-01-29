@@ -10,6 +10,7 @@ use binance::websockets::{WebSockets, WebsocketEvent};
 use std::{
     sync::{
         atomic::{AtomicBool, Ordering},
+        mpsc::Sender,
         Arc,
     },
     thread,
@@ -53,7 +54,7 @@ impl LightGBMStrategy<BinanceMarket> {
 }
 
 impl Strategy for LightGBMStrategy<BinanceMarket> {
-    fn execute(&self, running: Arc<AtomicBool>) {
+    fn execute(&self, running: Arc<AtomicBool>, tx: &Sender<String>) {
         while running.load(Ordering::SeqCst) {
             let dataset = self.load_dataset();
 
@@ -113,6 +114,7 @@ impl Strategy for LightGBMStrategy<BinanceMarket> {
             let mut invalid_prediction_warning_shown = false;
             let start_of_next_candle = ceil_hour(now());
             let connected = AtomicBool::new(true);
+            // TODO: handle binance's 24hr websocket connection timeout
             let mut web_socket = WebSockets::new(|event: WebsocketEvent| {
                 // Disconnect if we got the signal to terminate the program (e.g. CTRL + C).
                 if running.load(Ordering::SeqCst) == false {
@@ -169,13 +171,16 @@ impl Strategy for LightGBMStrategy<BinanceMarket> {
                                     self.config.trade.test,
                                 )
                                 .expect("failed to place sell order");
-                            info!(
+
+                            let msg = format!(
                                 "Sold {} {} for an estimated profit of {} USD ({}%).",
                                 self.config.trade.amount,
                                 self.config.symbol.clone(),
                                 profit,
                                 profit_percentage
                             );
+                            info!("{}", &msg);
+                            tx.send(msg).unwrap();
 
                             connected.store(false, Ordering::SeqCst);
                         }

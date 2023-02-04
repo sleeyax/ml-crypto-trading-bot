@@ -94,7 +94,7 @@ impl BinanceMarket {
 
             loop {
                 match market.get_klines(
-                    to_symbol(&options.pair),
+                    &options.pair,
                     options.interval.to_string(),
                     options.limit.or(Some(BINANCE_MAX_KLINES)),
                     start_time,
@@ -131,16 +131,11 @@ impl BinanceMarket {
 
 impl Market for BinanceMarket {
     fn get_price(&self, symbol: &str) -> anyhow::Result<f64> {
-        let price_symbol = self
-            .market
-            .get_price(to_symbol(symbol))
-            .map_err(map_binance_error)?;
+        let price_symbol = self.market.get_price(symbol).map_err(map_binance_error)?;
         Ok(price_symbol.price)
     }
 
     fn place_buy_order(&self, symbol: &str, quantity: f64, test: bool) -> anyhow::Result<()> {
-        let symbol = to_symbol(symbol);
-
         if test {
             self.account
                 .test_market_buy_using_quote_quantity(symbol, quantity)
@@ -154,8 +149,6 @@ impl Market for BinanceMarket {
     }
 
     fn place_sell_order(&self, symbol: &str, quantity: f64, test: bool) -> anyhow::Result<()> {
-        let symbol = to_symbol(symbol);
-
         if test {
             self.account
                 .test_market_sell_using_quote_quantity(symbol, quantity)
@@ -172,8 +165,4 @@ impl Market for BinanceMarket {
 /// Converts a binance error to an anyhow error.
 fn map_binance_error(err: binance::errors::Error) -> anyhow::Error {
     anyhow::anyhow!(err.to_string())
-}
-
-pub fn to_symbol(symbol: &str) -> String {
-    symbol.replace("/", "")
 }

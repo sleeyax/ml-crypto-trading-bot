@@ -1,6 +1,6 @@
 use crate::{
     binance_market::{
-        to_symbol, BinanceKlineInterval, BinanceKlineOptions, BinanceMarket, BINANCE_MARKET_EPOCH,
+        BinanceKlineInterval, BinanceKlineOptions, BinanceMarket, BINANCE_MARKET_EPOCH,
     },
     dataset::DataSet,
     market::Market,
@@ -180,10 +180,7 @@ impl Strategy for LightGBMStrategy<BinanceMarket> {
                 Ok(())
             });
             web_socket
-                .connect(&format!(
-                    "{}@kline_1h",
-                    to_symbol(&self.config.symbol).to_lowercase()
-                ))
+                .connect(&format!("{}@kline_1h", &self.config.symbol.to_lowercase()))
                 .expect("websocket failed to connect");
             web_socket.event_loop(&connected).unwrap();
             web_socket.disconnect().unwrap();

@@ -23,7 +23,11 @@ pub mod model;
 pub mod strategy;
 pub mod utils;
 
-async fn start_telegram_bot(config: TelegramConfig, notification_rx: Receiver<String>) {
+async fn start_telegram_bot(
+    config: TelegramConfig,
+    notification_rx: Receiver<String>,
+    running: Arc<AtomicBool>,
+) {
     info!("Starting telegram bot.");
 
     let telegram_bot = Bot::new(config.bot_token);
@@ -46,12 +50,14 @@ async fn start_telegram_bot(config: TelegramConfig, notification_rx: Receiver<St
     });
 
     let handle_sender = tokio::spawn(async move {
-        let msg = notification_rx.recv().unwrap();
+        while running.load(Ordering::SeqCst) {
+            let msg = notification_rx.recv().unwrap();
 
-        telegram_bot
-            .send_message(config.chat_id.to_string(), msg)
-            .await
-            .unwrap();
+            telegram_bot
+                .send_message(config.chat_id.to_string(), msg)
+                .await
+                .unwrap();
+        }
     });
 
     let _ = tokio::join!(handle_listener);
@@ -76,6 +82,7 @@ async fn main() {
     })
     .expect("Error setting Ctrl-C handler");
 
+    let r = running.clone();
     let handle_trading_bot = thread::spawn(move || {
         if config.trade.test {
             warn!("Bot is running in test mode. No real funds will be spent.");
@@ -85,10 +92,11 @@ async fn main() {
 
         let market = BinanceMarket::new(config.binance.clone());
         let strategy = LightGBMStrategy::new(config, market);
-        strategy.execute(running.clone(), &notification_tx);
+        strategy.execute(r, &notification_tx);
     });
 
-    start_telegram_bot(telegram_config, notification_rx).await;
+    let r = running.clone();
+    start_telegram_bot(telegram_config, notification_rx, r).await;
 
     handle_trading_bot
         .join()

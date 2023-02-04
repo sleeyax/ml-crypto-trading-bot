@@ -1,5 +1,4 @@
 symbol: BTCUSDT
-verbose: true
 
 binance:
   api_key: paste your binance api key here

@@ -11,7 +11,6 @@ pub struct AppConfig {
     pub trade: TradeConfig,
     pub telegram: TelegramConfig,
     pub symbol: String,
-    pub verbose: bool,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -71,7 +70,6 @@ mod tests {
     fn test_try_load_config() {
         let config = try_load_config("config.example.yaml");
         assert_eq!(config.symbol, "BTCUSDT");
-        assert_eq!(config.verbose, true);
         assert_eq!(config.binance.api_key, "paste your binance api key here");
         assert_eq!(
             config.binance.api_secret,

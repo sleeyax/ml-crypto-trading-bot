@@ -21,9 +21,7 @@ pub struct BinanceMarket {
 }
 
 pub struct BinanceKlineOptions {
-    /// The target trading pair (symbol).
-    /// May optionally contain one forward slash (`/`).
-    /// Examples: `BTC/USDT` ,`BTCEUR`.
+    /// The target trading pair/symbol.
     pub pair: String,
 
     /// Candle open/close intervals.

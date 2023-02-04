@@ -19,7 +19,6 @@ pub struct AppConfig {
 pub struct BinanceConfig {
     pub api_key: String,
     pub api_secret: String,
-    pub dataset_max_days: u16,
 }
 
 #[derive(Debug, Deserialize)]
@@ -27,7 +26,6 @@ pub struct BinanceConfig {
 pub struct TradeConfig {
     pub amount: f64,
     pub test: bool,
-    pub profit_percentage: f64,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -81,7 +79,6 @@ mod tests {
         );
         assert_eq!(config.trade.test, true);
         assert_eq!(config.trade.amount, 50.0);
-        assert_eq!(config.trade.profit_percentage, 10.0);
         assert_eq!(config.telegram.bot_token, "123456789:blablabla");
     }
 }

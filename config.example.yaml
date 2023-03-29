@@ -5,9 +5,13 @@ binance:
   api_secret: paste your binance api secret here
 
 trade:
+  # set to false to enable spending of real funds
   test: true
+  # trade amount
   amount: 50
 
 telegram:
+  # https://core.telegram.org/bots#how-do-i-create-a-bot
   bot_token: 123456789:blablabla
+  # send a direct message to your telegram bot while it's running to get the chat ID.
   chat_id: 1234567890

@@ -1,8 +1,12 @@
-# ml-crypto-trading-bot
+# :robot: ml-crypto-trading-bot
 
-Cryptocurrency trading bot using Machine Learning and Rust. Initially inspired by [CyberPunkMetalHead's repository](https://github.com/CyberPunkMetalHead/cryptocurrency-machine-learning-prediction-algo-trading).
+Cryptocurrency trading bot using Machine Learning and Rust. Inspired by [CyberPunkMetalHead/cryptocurrency-machine-learning-prediction-algo-trading](https://github.com/CyberPunkMetalHead/cryptocurrency-machine-learning-prediction-algo-trading).
 
-## Strategy
+## :warning: Disclaimer
+
+This bot has been developed in response to another project and out of curiousity to see if I could build an improved version in Rust. The efficiency of the strategy itself hasn't been thoroughly tested. Use this program at your own risk!
+
+## :book: Strategy
 
 The trading strategy is relatively simple:
 

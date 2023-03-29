@@ -15,7 +15,7 @@ The trading strategy is relatively simple:
 - Using the trained model, predict the current candle `high` price. If it's lower than the current `open` or `close` (i.e current) price, wait for the next candle and start over. Otherwise, place a buy order.
 - Finally, the bot waits for the price to go up until the the prediction is reached. If the prediction isn't reached by the end of the candle, it just waits until the prediction is reached eventually.
 
-## :info: Installation & usage
+## 💻 Installation & usage
 
 Install [Rust](https://www.rust-lang.org/tools/install) and clone this repository:
 
@@ -24,7 +24,7 @@ $ git clone https://github.com/sleeyax/ml-crypto-trading-bot.git
 $ cd ml-crypto-trading-bot
 ```
 
-Then, copy the config file and edit it accordingly (should be self explanatory):
+Then, copy the config file and edit it accordingly (should be self-explanatory):
 
 ```bash
 $ cp config.example.yaml config.yaml
@@ -43,4 +43,8 @@ To run the bot in production mode, execute:
 $ RUST_LOG=info cargo run
 ```
 
-You can also build a binary release with `cargo build -r` and copy it + your config file to a VPS or raspberry pi.
+You can also build a release binary with `cargo build -r` and copy it + your config file to a VPS or raspberry pi.
+
+## 📷 Screenshots
+<img width="1227" alt="image" src="https://user-images.githubusercontent.com/30344294/228659990-db8cf341-d8f1-4686-9ea9-3dd04cdb5fa4.png">
+
